@@ -1,0 +1,10 @@
+{
+    "include": [
+        "dist/memory.js"
+    ],
+    "compilerOptions": {
+        "declaration": true,
+        "emitDeclarationOnly": true,
+        "allowJs": true
+    }
+}
