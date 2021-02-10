@@ -1,4 +1,4 @@
-# Env utility
+# Memory utility
 
 by [Nicholas C. Zakas](https://humanwhocodes.com)
 
@@ -6,7 +6,9 @@ If you find this useful, please consider supporting my work with a [donation](ht
 
 ## Description
 
-A utility for verifying that environment variables are present in Node.js and Deno. The main use case is to easily throw an error when an environment variable is missing. This is most useful immediately after a Node.js or Deno program has been initiated, to fail fast and let you know that environment variables haven't been setup correctly.
+A JavaScript implementation of dynamic memory using an `ArrayBuffer` as the memory storage.
+
+**Warning:** Very experimental right now.
 
 ## Usage
 
@@ -15,115 +17,85 @@ A utility for verifying that environment variables are present in Node.js and De
 Install using [npm][npm] or [yarn][yarn]:
 
 ```
-npm install @humanwhocodes/env --save
+npm install @humanwhocodes/memory --save
 
 # or
 
-yarn add @humanwhocodes/env
+yarn add @humanwhocodes/memory
 ```
 
 Import into your Node.js project:
 
 ```js
 // CommonJS
-const { Env } = require("@humanwhocodes/env");
+const { Memory } = require("@humanwhocodes/memory");
 
 // ESM
-import { Env } from "@humanwhocodes/env";
+import { Memory } from "@humanwhocodes/memory";
 ```
-
-By default, an `Env` instance will read from `process.env`.
 
 ### Deno
 
 Import into your Deno project:
 
 ```js
-import { Env } from "https://cdn.skypack.dev/@humanwhocodes/env?dts";
+import { Memory } from "https://cdn.skypack.dev/@humanwhocodes/memory?dts";
 ```
-
-By default, an `Env` instance will read from `Deno.env`.
 
 ### Browser
 
 It's recommended to import the minified version to save bandwidth:
 
 ```js
-import { Env } from "https://cdn.skypack.dev/@humanwhocodes/env?min";
+import { Memory } from "https://cdn.skypack.dev/@humanwhocodes/memory?min";
 ```
 
 However, you can also import the unminified version for debugging purposes:
 
 ```js
-import { Env } from "https://cdn.skypack.dev/@humanwhocodes/env";
+import { Memory } from "https://cdn.skypack.dev/@humanwhocodes/memory";
 ```
-
-
-By default, an `Env` instance will read from an empty object.
 
 ## API
 
-After importing, create a new instance of `Env` to start reading environment variables:
+After importing, create a new instance of `Memory` and pass in an `ArrayBuffer` to represent your memory:
 
 ```js
-const env = new Env();
+const memory = new Memory(new ArrayBuffer(64));
 
-// read a variable and don't care if it's empty
-const username = env.get("USERNAME");
+// allocate 4 bytes
+const address = memory.allocate(4);
 
-// read a variable and use a default if empty
-const username = env.get("USERNAME", "humanwhocodes");
+// address is 0 if no memory could be allocated
+if (address) {
 
-// determine if a variable exists
-const username = env.has("USERNAME");
+    // write some data into that address - must be a typed array
+    memory.write(address, new Uint8Array([1, 2, 3, 4]));
 
-// read the first found variable and use a default is empty
-const username = env.first(["USERNAME", "USERNAME2"], "humanwhocodes");
+    // read the data back out - returns a Uint8Array
+    const data = memory.read(address);
 
-// read a variable and throw an error if it doesn't exist
-// or is an empty string
-const username = env.require("USERNAME");
+    // free up the mory
+    memory.free(address);
+
+} else {
+    console.error("Could not allocate memory.");
+}
 ```
 
-To retrieve more than one required environment variable at one time, you can use the `required` property with destructuring assignment:
+## Safety
 
-```js
-const env = new Env();
+The `Memory` class provides safeguards to ensure you aren't accidentally writing or reading data where you shouldn't:
 
-// throws if variables are undefined or an empty string
-const {
-    CLIENT_ID,
-    CLIENT_SECRET
-} = env.required;
-```
+1. `allocate()` returns `0` when no more memory can be allocated, allowing you to handle out-of-memory issues gracefully.
+1. `write()` throws an error when:
+    1. You try to write to address `0`.
+    1. You try to write to an unallocated address.
+    1. The data you're writing is larger than the allocated space.
+1. `read()` throws an error if you attempt to read from an invalid address.
+1. `free()` throws an error if you attempt to free an invalid address.
 
-In this example, an error is thrown if either `CLIENT_ID` or `CLIENT_SECRET` is missing or an empty string. The `required` property is a proxy object that throws an error whenever you attempt to access a property that doesn't exist.
-
-If you don't want to throw an error for environment variables containing an empty string, use the `exists` property:
-
-```js
-const env = new Env();
-
-// throws only if variables are not defined
-const {
-    CLIENT_ID,
-    CLIENT_SECRET
-} = env.exists;
-```
-
-You can also specify an alternate object to read variables from. This can be useful for testing or in the browser (where there is no environment variable to read from by default):
-
-```js
-const env = new Env({
-    USERNAME: "humanwhocodes"
-});
-
-// read a variable and don't care if it's empty
-const username = env.get("USERNAME");
-
-// read a variable and throw an error if it doesn't exist
-const password = env.require("PASSWORD");
-```
+All of this is to say, it should be difficult to accidentally overwrite memory locations.
 
 ## Developer Setup
 
@@ -132,11 +104,9 @@ const password = env.require("PASSWORD");
 3. Run `npm install` to setup dependencies
 4. Run `npm test` to run tests
 
-**Note:** The `src/env.d.ts` file is automatically generated and should not be modified directly. If you modify `src/env.js` then `src/env.d.ts` will be generated using a precommit hook.
-
 ## License
 
-BSD 3-Clause
+Apache 2.0
 
 [npm]: https://npmjs.com/
 [yarn]: https://yarnpkg.com/

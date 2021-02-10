@@ -3,4 +3,4 @@
  * @author Nicholas C. Zakas
  */
 
-export { ImplicitFreeList } from "./implicit-free-list.js";
+export { Memory } from "./memory.js";
