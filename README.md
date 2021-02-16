@@ -8,7 +8,7 @@ If you find this useful, please consider supporting my work with a [donation](ht
 
 A JavaScript implementation of dynamic memory using an `ArrayBuffer` as the memory storage.
 
-**Warning:** Very experimental right now.
+**Warning:** Very experimental right now. May or may not be useful.
 
 ## Usage
 
