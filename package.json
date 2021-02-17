@@ -1,6 +1,6 @@
 {
   "name": "@humanwhocodes/memory",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A library for working with ArrayBuffer as raw memory.",
   "main": "dist/memory.cjs.js",
   "module": "dist/memory.js",
