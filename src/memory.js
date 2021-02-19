@@ -10,6 +10,14 @@
 import { ImplicitFreeList } from "./implicit-free-list.js";
 
 //-----------------------------------------------------------------------------
+// Helpers
+//-----------------------------------------------------------------------------
+
+/**
+ * @typedef {Int8Array | Uint8Array | Int16Array | Uint16Array | Int32Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array} TypedArray;
+ */
+
+//-----------------------------------------------------------------------------
 // Memory
 //-----------------------------------------------------------------------------
 
@@ -23,9 +31,9 @@ export class Memory {
     /**
      * Creates a new instance.
      * @param {ArrayBuffer} buffer The ArrayBuffer to use as memory. 
-     * @param {int} [byteOffset=0] The starting byte offset in the buffer for
+     * @param {number} [byteOffset=0] The starting byte offset in the buffer for
      *      memory.
-     * @param {int} [byteLength=buffer.length] The total number of bytes
+     * @param {number} [byteLength=buffer.length] The total number of bytes
      *      available in the memory.
      */
     constructor(buffer, byteOffset = 0, byteLength = buffer.byteLength) {
@@ -82,8 +90,8 @@ export class Memory {
     /**
      * Allocates the given number of bytes in memory. This uses the first-fit
      * algorithm to locate the available space.
-     * @param {int} byteCount The total number of bytes to allocate. 
-     * @returns {int} The address where the bytes were allocated.
+     * @param {number} byteCount The total number of bytes to allocate. 
+     * @returns {number} The address where the bytes were allocated.
      * @throws {Error} If there are not enough free bytes to allocate.
      */
     allocate(byteCount) {
@@ -92,7 +100,7 @@ export class Memory {
 
     /**
      * Frees the given memory address. 
-     * @param {int} address The memory address to free.
+     * @param {number} address The memory address to free.
      * @returns {void}
      * @throws {Error} If address is invalid. 
      */
