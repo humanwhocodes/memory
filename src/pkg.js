@@ -4,3 +4,4 @@
  */
 
 export { Memory } from "./memory.js";
+export { ImplicitFreeList } from "./implicit-free-list.js";
