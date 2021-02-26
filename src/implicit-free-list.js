@@ -56,33 +56,6 @@ export class ImplicitCursor {
         return this.size ? this.size - HEADER_SIZE : 0;
     }
 
-    get data() {
-        if (!this.used) {
-            throw new Error("Memory hasn't been allocated.");
-        }
-
-        return new Uint8Array(this.view.buffer, this.address, this.dataSize);
-    }
-
-    set data(value) {
-
-        if (!this.used) {
-            throw new Error("Memory hasn't been allocated.");
-        }
-
-        if (!(value.buffer instanceof ArrayBuffer)) {
-            throw new TypeError("Value must a typed array.");
-        }
-
-        if (value.byteLength > this.dataSize) {
-            throw new Error("Value is too big for block.");
-        }
-
-        const source = new Uint8Array(value.buffer);
-        const destination = new Uint8Array(this.view.buffer);
-        destination.set(source, this.address);
-    }
-
     /**
      * Allocates the current block with the given number of bytes.
      * @param {number} byteCount The number of bytes to allocate. Odd numbers
@@ -364,7 +337,12 @@ export class ImplicitFreeList {
         const kursor = this[cursor];
 
         kursor.findAddress(address);
-        return kursor.data;
+
+        if (!kursor.used) {
+            throw new Error("Memory hasn't been allocated.");
+        }
+
+        return new Uint8Array(this.view.buffer, this.address, this.dataSize);
     }
 
     /**
@@ -379,8 +357,22 @@ export class ImplicitFreeList {
     write(address, data) {
 
         const kursor = this[cursor];
-
         kursor.findAddress(address);
-        kursor.data = data;
+
+        if (!kursor.used) {
+            throw new Error("Memory hasn't been allocated.");
+        }
+
+        if (!ArrayBuffer.isView(data)) {
+            throw new TypeError("Value must a typed array.");
+        }
+
+        if (data.byteLength > kursor.dataSize) {
+            throw new Error("Value is too big for block.");
+        }
+
+        const source = new Uint8Array(data.buffer);
+        const destination = new Uint8Array(this.buffer);
+        destination.set(source, address);
     }
 }

@@ -223,45 +223,6 @@ describe("ImplicitCursor", () => {
 
         });
 
-        describe("data", () => {
-
-            it("should throw an error when the memory hasn't been allocated", () => {
-                expect(() => {
-                    cursor.data = "foo";
-                }).throws(/allocated/);
-            });
-
-            it("should throw an error when the memory isn't big enough for the value", () => {
-                cursor.allocate(2);
-                expect(() => {
-                    cursor.data = new Uint8Array(3);
-                }).throws(/too big/);
-            });
-
-            it("should throw an error when the value isn't a typed array", () => {
-                cursor.allocate();
-                expect(() => {
-                    cursor.data = "foo";
-                }).throws(/typed array/);
-            });
-
-            it("should return a Uint8Array when read", () => {
-                cursor.allocate();
-                const data = cursor.data;
-                expect(data).instanceOf(Uint8Array);
-            });
-            
-            it("should set data when written", () => {
-                const values = [120, 2, 45, 8];
-                const bytes = new Uint8Array(values);
-                cursor.allocate(bytes.length);
-                cursor.data = bytes;
-                expect(cursor.data).to.deep.equal(new Uint8Array(values));
-            });
-
-
-        });
-
         describe("allocate()", () => {
 
             it("should throw an error when trying to allocate the same block twice", () => {
@@ -329,25 +290,8 @@ describe("ImplicitCursor", () => {
                 expect(endPosition).to.equal(startPosition + 2 + ImplicitCursor.HEADER_SIZE);
             });
 
-            it("should store multiple values when data is set after next()", () => { 
-                cursor.allocate(2);
-                cursor.data = new Uint8Array([25, 26]);
-                cursor.next();
-                
-                cursor.allocate(4);
-                cursor.data = new Uint8Array([27, 28, 29, 30]);
-                cursor.next();
-
-                cursor.bytePosition = 0;
-                expect(cursor.data).to.deep.equal(new Uint8Array([25, 26]));
-                cursor.next();
-
-                expect(cursor.data).to.deep.equal(new Uint8Array([27, 28, 29, 30]));
-            });
-
             it("should throw an error when called at end of free list", () => { 
                 cursor.allocate(2);
-                cursor.data = new Uint8Array([25, 26]);
                 cursor.next();
                 
                 expect(() => {
@@ -381,45 +325,26 @@ describe("ImplicitCursor", () => {
             });
 
             it("should reset value to all 0s when called", () => {
+                const destination = new Uint8Array(cursor.view.buffer);
                 cursor.allocate(2);
-                cursor.data = new Uint8Array([25, 26]);
+                destination.set(new Uint8Array([25, 26]), cursor.address);
                 cursor.free();
-
+                
                 cursor.use();
-                expect(cursor.data).to.deep.equal(new Uint8Array(2));                
+                expect(destination.slice(cursor.address / 8, 2)).to.deep.equal(new Uint8Array(2));                
             });
-
+            
             it("should set used to 1 when called", () => {
+                const destination = new Uint8Array(cursor.view.buffer);
                 cursor.allocate(2);
-                cursor.data = new Uint8Array([25, 26]);
+                destination.set(new Uint8Array([25, 26]), cursor.address);
                 cursor.free();
 
                 cursor.use();
                 expect(cursor.used).to.equal(1);                
             });
 
-            it("should store multiple values when data is set after next()", () => {
-                cursor.allocate(2);
-                cursor.data = new Uint8Array([25, 26]);
-                cursor.next();
-
-                cursor.allocate(4);
-                cursor.data = new Uint8Array([27, 28, 29, 30]);
-                cursor.next();
-
-                cursor.reset();
-                cursor.free();
-                cursor.use();
-                cursor.data = new Uint8Array([45, 46]);
-                expect(cursor.data).to.deep.equal(new Uint8Array([45, 46]));
-                cursor.next();
-
-                expect(cursor.data).to.deep.equal(new Uint8Array([27, 28, 29, 30]));
-            });
-
         });
-
-
 
     });
 
