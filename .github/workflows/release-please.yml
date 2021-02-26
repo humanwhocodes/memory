@@ -31,9 +31,11 @@ jobs:
 
       # Tweets out release announcement
       - uses: actions/setup-node@v1
+        if: ${{ steps.release.outputs.release_created }}
         with:
           node-version: 12
       - run: 'npx @humanwhocodes/tweet "Memory v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }} has been released!\n\n${{ github.event.release.html_url }}"'
+        if: ${{ steps.release.outputs.release_created }}
         env:
           TWITTER_CONSUMER_KEY: ${{ secrets.TWITTER_CONSUMER_KEY }}
           TWITTER_CONSUMER_SECRET: ${{ secrets.TWITTER_CONSUMER_SECRET }}
