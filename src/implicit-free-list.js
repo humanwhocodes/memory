@@ -3,6 +3,8 @@
  * @author Nicholas C. Zakas
  */
 
+import { FreeList } from "./free-list.js";
+
 //-----------------------------------------------------------------------------
 // Cursor
 //-----------------------------------------------------------------------------
@@ -183,12 +185,10 @@ ImplicitCursor.HEADER_SIZE = HEADER_SIZE;
 // List
 //-----------------------------------------------------------------------------
 
-const cursor = Symbol("cursor");
-
 /**
- * Represents a map of memory in an ArrayBuffer.
+ * Represents a map of memory in an ArrayBuffer using an implicit free list.
  */
-export class ImplicitFreeList {
+export class ImplicitFreeList extends FreeList {
     
     /**
      * Creates a new instance.
@@ -199,180 +199,7 @@ export class ImplicitFreeList {
      *      available in the memory.
      */
     constructor(buffer, byteOffset = 0, byteLength = buffer.byteLength) {
-  
-        if (byteOffset + byteLength > buffer.byteLength) {
-            throw new RangeError(`Cannot allocate ${ byteOffset + byteLength } bytes; only ${ buffer.byteLength } bytes available.`);
-        }
-
-        /**
-         * The buffer used as the source of bytes.
-         * @property buffer
-         * @type ArrayBuffer
-         */
-        this.buffer = buffer;
-
-        /**
-         * The starting offset to use in the buffer.
-         * @property buffer
-         * @type ArrayBuffer
-         */
-        this.byteOffset = byteOffset;
-
-        /**
-         * The number of bytes to use in the buffer.
-         * @property buffer
-         * @type ArrayBuffer
-         */
-        this.byteLength = byteLength;
-
-        /**
-         * The DataView used to do the work.
-         * @property view
-         * @type DataView
-         */
-        this.view = new DataView(buffer, byteOffset, byteLength);
-
-        /**
-         * The cursor used to navigate the list.
-         * @property cursor
-         * @type ImplicitCursor
-         * @private
-         */
-        this[cursor] = new ImplicitCursor(this.view);
-
-        // lock everything down
-        Object.defineProperties(this, {
-            buffer: {
-                writable: false,
-                configurable: false
-            },
-            byteOffset: {
-                writable: false,
-                configurable: false
-            },
-            byteLength: {
-                writable: false,
-                configurable: false
-            },
-            view: {
-                writable: false,
-                configurable: false
-            },
-            [this]: {
-                writable: false,
-                configurable: false
-            }
-        });
-    }
-
-    /**
-     * Allocates the given number of bytes in memory. This uses the first-fit
-     * algorithm to locate the available space.
-     * @param {number} byteCount The total number of bytes to allocate. 
-     * @returns {number} The address where the bytes were allocated.
-     * @throws {Error} If there are not enough free bytes to allocate.
-     */
-    allocate(byteCount) {
-
-        const kursor = this[cursor];
-        let found = false;
-
-        kursor.reset();
-
-        /* eslint-disable-next-line no-constant-condition */
-        while (true) {
-            if (kursor.dataSize >= byteCount && !kursor.used) {
-                found = true;
-                break;
-            }
-
-            if (kursor.hasNext()) {
-                kursor.next();
-            } else {
-                break;
-            }
-        }
-
-        if (found) {
-            kursor.use();
-        } else {
-
-            /*
-             * If there's not enough memory, don't throw an error. Just return
-             * 0 to indicate no allocation happened. Addresses are always 
-             * greater than 0.
-             */
-            try {
-                kursor.allocate(byteCount);
-            } catch (error) {
-                return 0;
-            }
-        }
-
-        return kursor.address;
-    }
-
-    /**
-     * Frees the given memory address. 
-     * @param {number} address The memory address to free.
-     * @returns {void}
-     * @throws {Error} If address is invalid. 
-     */
-    free(address) {
-
-        const kursor = this[cursor];
-
-        kursor.findAddress(address);
-        kursor.free();
-    }
-
-    /**
-     * Reads data from a given memory address. 
-     * @param {number} address The memory address to free.
-     * @returns {Uint8Array} The data found at the memory address.
-     * @throws {Error} If address is invalid.
-     */
-    read(address) {
-
-        const kursor = this[cursor];
-
-        kursor.findAddress(address);
-
-        if (!kursor.used) {
-            throw new Error("Memory hasn't been allocated.");
-        }
-
-        return new Uint8Array(this.view.buffer, this.address, this.dataSize);
-    }
-
-    /**
-     * Writes data to a given memory address. 
-     * @param {number} address The memory address to free.
-     * @param {TypedArray} data The data to write.
-     * @returns {void}
-     * @throws {Error} If address is invalid.
-     * @throws {Error} If data isn't a TypedArray.
-     * @throws {Error} If the data is larger than the available space.
-     */
-    write(address, data) {
-
-        const kursor = this[cursor];
-        kursor.findAddress(address);
-
-        if (!kursor.used) {
-            throw new Error("Memory hasn't been allocated.");
-        }
-
-        if (!ArrayBuffer.isView(data)) {
-            throw new TypeError("Value must a typed array.");
-        }
-
-        if (data.byteLength > kursor.dataSize) {
-            throw new Error("Value is too big for block.");
-        }
-
-        const source = new Uint8Array(data.buffer);
-        const destination = new Uint8Array(this.buffer);
-        destination.set(source, address);
+        const view = new DataView(buffer);
+        super(new ImplicitCursor(view), buffer, byteOffset, byteLength);
     }
 }

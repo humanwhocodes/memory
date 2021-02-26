@@ -1,5 +1,5 @@
 /**
- * @fileoverview Tests for the ImplicitFreeList class.
+ * @fileoverview Tests for the ExplicitFreeList class.
  */
 /*global describe, it, beforeEach*/
 
@@ -7,7 +7,7 @@
 // Requirements
 //-----------------------------------------------------------------------------
 
-import { ImplicitCursor, ImplicitFreeList } from "../src/implicit-free-list.js";
+import { ExplicitCursor, ExplicitFreeList } from "../src/Explicit-free-list.js";
 import { expect } from "chai";
 
 //-----------------------------------------------------------------------------
@@ -15,19 +15,19 @@ import { expect } from "chai";
 //-----------------------------------------------------------------------------
 
 
-describe("ImplicitFreeList", () => {
+describe("ExplicitFreeList", () => {
 
-    describe("new ImplicitFreeList()", () => {
+    describe("new ExplicitFreeList()", () => {
 
         it("should throw an error when there are not enough bytes", () => {
             expect(() => {
-                new ImplicitFreeList(new ArrayBuffer(6), 0, 8);
+                new ExplicitFreeList(new ArrayBuffer(6), 0, 8);
             }).throws(/Cannot/);
         });
 
         it("should throw an error when there are not enough bytes", () => {
             expect(() => {
-                new ImplicitFreeList(new ArrayBuffer(6), 2, 6);
+                new ExplicitFreeList(new ArrayBuffer(6), 2, 6);
             }).throws(/Cannot/);
         });
     });
@@ -37,7 +37,7 @@ describe("ImplicitFreeList", () => {
         let list;
 
         beforeEach(() => {
-            list = new ImplicitFreeList(new Uint8Array(25).buffer);
+            list = new ExplicitFreeList(new Uint8Array(25).buffer);
         });
 
 
@@ -73,7 +73,7 @@ describe("ImplicitFreeList", () => {
         let list;
 
         beforeEach(() => {
-            list = new ImplicitFreeList(new Uint8Array(25).buffer);
+            list = new ExplicitFreeList(new Uint8Array(25).buffer);
         });
 
 
@@ -120,7 +120,7 @@ describe("ImplicitFreeList", () => {
 
         beforeEach(() => {
             data = new Uint8Array(25);
-            list = new ImplicitFreeList(data.buffer);
+            list = new ExplicitFreeList(data.buffer);
         });
 
 
@@ -156,9 +156,9 @@ describe("ImplicitFreeList", () => {
     });
 });
 
-describe("ImplicitCursor", () => {
+describe("ExplicitCursor", () => {
 
-    describe("new ImplicitCursor()", () => {
+    describe("new ExplicitCursor()", () => {
 
     });
 
@@ -167,7 +167,7 @@ describe("ImplicitCursor", () => {
         let cursor;
 
         beforeEach(() => {
-            cursor = new ImplicitCursor(new DataView(new Int32Array(10).buffer));
+            cursor = new ExplicitCursor(new DataView(new Int32Array(10).buffer));
         });
 
         describe("used", () => {
@@ -246,7 +246,7 @@ describe("ImplicitCursor", () => {
             it("should not affect the size value when called", () => {
                 cursor.allocate(8);
                 expect(cursor.dataSize).to.equal(8);
-                expect(cursor.size).to.equal(8 + ImplicitCursor.HEADER_SIZE);
+                expect(cursor.size).to.equal(8 + ExplicitCursor.HEADER_SIZE);
             });
         });
 
@@ -287,7 +287,7 @@ describe("ImplicitCursor", () => {
                 cursor.next();
                 const endPosition = cursor.bytePosition;
                 
-                expect(endPosition).to.equal(startPosition + 2 + ImplicitCursor.HEADER_SIZE);
+                expect(endPosition).to.equal(startPosition + 2 + ExplicitCursor.HEADER_SIZE);
             });
 
             it("should throw an error when called at end of free list", () => { 
